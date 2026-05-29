@@ -856,36 +856,18 @@ class CallActivity : SimpleActivity() {
     }
 
     private fun enableProximitySensor() {
-    if (!config.disableProximitySensor && (proximityWakeLock == null || proximityWakeLock?.isHeld == false)) {
-
-        try {
-            CallManager.setAudioRoute(CallAudioState.ROUTE_WIRED_OR_EARPIECE)
-        } catch (e: Exception) {
-            e.printStackTrace()
+        if (!config.disableProximitySensor && (proximityWakeLock == null || proximityWakeLock?.isHeld == false)) {
+            val powerManager = getSystemService(Context.POWER_SERVICE) as PowerManager
+            proximityWakeLock = powerManager.newWakeLock(PowerManager.PROXIMITY_SCREEN_OFF_WAKE_LOCK, "org.fossify.phone:wake_lock")
+            proximityWakeLock!!.acquire(60 * MINUTE_SECONDS * 1000L)
         }
-
-        val powerManager = getSystemService(Context.POWER_SERVICE) as PowerManager
-        proximityWakeLock = powerManager.newWakeLock(
-            PowerManager.PROXIMITY_SCREEN_OFF_WAKE_LOCK,
-            "org.fossify.phone:wake_lock"
-        )
-
-        proximityWakeLock!!.acquire(60 * MINUTE_SECONDS * 1000L)
     }
-}
 
     private fun disableProximitySensor() {
-
-    try {
-        CallManager.setAudioRoute(CallAudioState.ROUTE_SPEAKER)
-    } catch (e: Exception) {
-        e.printStackTrace()
+        if (proximityWakeLock?.isHeld == true) {
+            proximityWakeLock!!.release()
+        }
     }
-
-    if (proximityWakeLock?.isHeld == true) {
-        proximityWakeLock!!.release()
-    }
-}
 
     private fun disableAllActionButtons() {
         (binding.ongoingCallHolder.children + binding.callEnd)
